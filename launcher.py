@@ -339,18 +339,31 @@ class ModelStack(App):
             for m in fm:
                 b = m["name"].split(":")[0] if ":" in m["name"] else m["name"]
                 groups.setdefault(b, []).append(m)
+            
+            idx = 0
+            target_idx = None
             for gn in sorted(groups.keys()):
                 lv.append(ListItem(Label(f"── {gn} ──"), classes="group"))
+                idx += 1
                 for m in groups[gn]:
                     n, s, u = m["name"], m["size"], m["unit"]
                     t = n.split(":")[-1] if ":" in n else n
                     txt = Text(f"  {t:<20} ({s} {u})")
                     if n == self._run: txt.stylize("bold green")
-                    elif n == self._last: txt.stylize("bold cyan")
+                    elif n == self._last: 
+                        txt.stylize("bold cyan")
+                        if target_idx is None: target_idx = idx
+                    
                     if n == self._run: txt.append(" *RUNNING*", style="bold green")
                     lv.append(ListItem(Label(txt), classes="item"))
+                    idx += 1
+            
             if curr_idx is not None and curr_idx < len(lv.children):
                 lv.index = curr_idx
+            elif target_idx is not None:
+                lv.index = target_idx
+            elif len(lv.children) > 1:
+                lv.index = 1 # Skip header
         except: pass
 
     def _log(self, m):
@@ -496,10 +509,11 @@ class ModelStack(App):
             return
         p = self._profs[idx]
         mod = p.get("model", "")
-        if mod: self._last = mod; self._cfg["last_model"] = mod
-        self._save_cfg()
-        self.sync_data()
-        self._log(f"Profile: {p['name']} set.")
+        if mod:
+            self._log(f"Launching Profile: {p['name']}...")
+            self._launch_m(mod)
+        else:
+            self._log(f"Profile: {p['name']} has no model.")
 
     def action_sync(self): self.sync_data()
 

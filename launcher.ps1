@@ -318,9 +318,22 @@ while ($true) {
                     $pi = [int]$pc - 1
                     if ($pi -ge 0 -and $pi -lt $profs.Count) {
                         $p = $profs[$pi]
-                        if ($p.model) { $script:lastModel = $p.model }
-                        Save-Config
-                        Write-Host "  Profile applied: $($p.name)" -ForegroundColor Green
+                        if ($p.model) {
+                            $script:lastModel = $p.model
+                            Save-Config
+                            Write-Host "  Profile applied: $($p.name). Launching..." -ForegroundColor Green
+                            Start-Sleep -Seconds 1
+                            
+                            if (-not (Test-Path $workDir)) {
+                                Write-Host "  [!] Warning: Directory not found: $workDir" -ForegroundColor Yellow
+                                Write-Host "  [➔] Falling back to D:\" -ForegroundColor Cyan
+                                $script:workDir = "D:\"
+                            }
+                            if (Test-Path $workDir) { Set-Location $workDir }
+                            ollama launch claude --model "$($p.model)"
+                            Write-Host ""
+                            Read-Host "  Press Enter to continue"
+                        }
                     }
                 } catch {
                     Write-Host "  Error loading profiles." -ForegroundColor Red
