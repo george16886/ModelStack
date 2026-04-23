@@ -166,7 +166,7 @@ class ListModal(ModalScreen[dict]):
 # App
 # ---------------------------------------------------------------------------
 class ModelStack(App):
-    ENABLE_COMMAND_PALETTE = False
+    ENABLE_COMMAND_PALETTE = True
     BINDINGS = [
         Binding("p", "pull", "Pull"),
         Binding("d", "del", "Delete"),
