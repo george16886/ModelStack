@@ -222,7 +222,8 @@ class ModelStack(App):
         self._profs = self._load_profs()
         self._bms = self._cfg.get("bookmarks", "").split("|") if self._cfg.get("bookmarks") else []
         self._bms = [x for x in self._bms if x]
-        self._wdir = self._cfg.get("work_dir", "D:\\")
+        self._wdir = os.getcwd()
+        self._cfg["work_dir"] = self._wdir
         self._last = self._cfg.get("last_model", "")
         self._launch, self._query = None, ""
 
@@ -242,6 +243,12 @@ class ModelStack(App):
             try: return json.loads(PROFILES_FILE.read_text("utf-8")).get("profiles", [])
             except: pass
         return []
+
+    def _save_profs(self):
+        try:
+            PROFILES_FILE.write_text(json.dumps({"profiles": self._profs}, indent=4, ensure_ascii=False), "utf-8")
+        except Exception as e:
+            self._log(f"Error saving profiles: {e}")
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -339,6 +346,7 @@ class ModelStack(App):
         except: pass
 
     def on_list_view_highlighted(self, e):
+        if e.list_view.id != "m-list": return
         m = self._get_m(e.list_view.index)
         det = self.query_one("#details", Static)
         if m: 
@@ -378,8 +386,9 @@ class ModelStack(App):
         if e.input.id == "s-in": self._query = e.value; self._rebuild()
 
     def on_list_view_selected(self, e):
-        m = self._get_m(e.list_view.index)
-        if m: self._launch_m(m["name"])
+        if e.list_view.id == "m-list":
+            m = self._get_m(e.list_view.index)
+            if m: self._launch_m(m["name"])
 
     def _launch_m(self, n):
         self._launch = n
@@ -417,32 +426,65 @@ class ModelStack(App):
     def _do_dir(self, p):
         if p and os.path.isdir(p): self._wdir = p; self._cfg["work_dir"] = p; self._save_cfg(); self.sync_data()
 
-    def action_bm(self): self.push_screen(ListModal("Bookmarks", self._bms + ["+ Add Current"]), callback=self._handle_bm)
+    def action_bm(self):
+        items = self._bms + ["+ Add Current", "+ Add Manual..."]
+        self.push_screen(ListModal("Bookmarks", items), callback=self._handle_bm)
+
     def _handle_bm(self, r):
         idx, act = r.get("idx", -1), r.get("act")
         self.query_one("#m-list").focus()
         if idx == -1 or act == "cancel": return
         if act == "delete":
-            if 0 <= idx < len(self._bms): self._bms.pop(idx); self._save_cfg(); self.set_timer(0.2, self.action_bm)
+            if 0 <= idx < len(self._bms):
+                removed = self._bms.pop(idx)
+                self._save_cfg()
+                self._log(f"Bookmark removed: {removed}")
+                self.set_timer(0.2, self.action_bm)
             return
         if idx == len(self._bms):
-            if self._wdir not in self._bms: self._bms.append(self._wdir); self._save_cfg(); self.sync_data()
-        else: self._wdir = self._bms[idx]; self._cfg["work_dir"] = self._wdir; self._save_cfg(); self.sync_data()
+            path = os.path.normpath(self._wdir)
+            if path not in self._bms:
+                self._bms.append(path)
+                self._save_cfg()
+                self._log(f"Bookmark added: {path}")
+            self.set_timer(0.2, self.action_bm)
+        elif idx == len(self._bms) + 1:
+            self.push_screen(InputModal("Add Bookmark", "C:\\Path\\To\\Folder"), callback=self._do_add_bm)
+        else:
+            self._wdir = self._bms[idx]
+            self._cfg["work_dir"] = self._wdir
+            self._save_cfg()
+            self._log(f"Switched to: {self._wdir}")
+            self.sync_data()
+
+    def _do_add_bm(self, p):
+        if p and os.path.isdir(p):
+            path = os.path.normpath(p)
+            if path not in self._bms:
+                self._bms.append(path)
+                self._save_cfg()
+                self._log(f"Bookmark added: {path}")
+            self.set_timer(0.2, self.action_bm)
+        elif p:
+            self._log(f"Error: Invalid directory: {p}")
+            self.set_timer(0.2, self.action_bm)
 
     def action_prof(self):
         if self._profs: self.push_screen(ListModal("Profiles", [f"{x['name']} ({x['model']})" for x in self._profs]), callback=self._handle_prof)
     def _handle_prof(self, r):
-        idx = r.get("idx", -1)
+        idx, act = r.get("idx", -1), r.get("act")
         self.query_one("#m-list", ListView).focus()
-        if idx == -1: return
+        if idx == -1 or act == "cancel": return
+        if act == "delete":
+            if 0 <= idx < len(self._profs):
+                removed = self._profs.pop(idx)
+                self._save_profs()
+                self._log(f"Profile removed: {removed['name']}")
+                self.set_timer(0.2, self.action_prof)
+            return
         p = self._profs[idx]
         mod = p.get("model", "")
         if mod: self._last = mod; self._cfg["last_model"] = mod
-        wd = p.get("work_dir", "")
-        if wd and os.path.isdir(wd): 
-            self._wdir = wd; self._cfg["work_dir"] = wd
-        elif wd:
-            self._log(f"Warning: Directory not found: {wd}")
         self._save_cfg()
         self.sync_data()
         self._log(f"Profile: {p['name']} set.")

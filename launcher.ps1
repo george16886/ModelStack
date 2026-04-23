@@ -4,7 +4,7 @@
 $ErrorActionPreference = 'SilentlyContinue'
 $ConfigFile = Join-Path $PSScriptRoot "config.txt"
 $lastModel = ""
-$workDir = "D:\"
+$workDir = $PWD.Path
 $bookmarks = @()
 
 # Load config
@@ -309,7 +309,6 @@ while ($true) {
                     if ($pi -ge 0 -and $pi -lt $profs.Count) {
                         $p = $profs[$pi]
                         if ($p.model) { $script:lastModel = $p.model }
-                        if ($p.work_dir -and (Test-Path $p.work_dir)) { $script:workDir = $p.work_dir }
                         Save-Config
                         Write-Host "  Profile applied: $($p.name)" -ForegroundColor Green
                     }
