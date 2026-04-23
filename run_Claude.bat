@@ -7,7 +7,7 @@ set "work_dir=%~dp0"
 
 REM Load config if exists
 if exist "!CONFIGFILE!" (
-    for /f "tokens=1,* delims==" %%A in (!CONFIGFILE!) do (
+    for /f "usebackq tokens=1,* delims==" %%A in ("!CONFIGFILE!") do (
         if "%%A"=="last_model" set "last_model=%%B"
         if "%%A"=="work_dir" set "work_dir=%%B"
     )
@@ -30,12 +30,28 @@ for /f "skip=1 tokens=1,3" %%A in ('ollama ps 2^>nul') do (
 )
 if not defined running echo  [*] Running: (none)
 
+REM Feature H: System resources
+REM Feature H: GPU info via temp file (avoids = escaping issues)
+nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv,noheader,nounits > "%TEMP%\gpu_info.tmp" 2>nul
+if !errorlevel!==0 (
+    for /f "usebackq tokens=1-3 delims=, " %%A in ("%TEMP%\gpu_info.tmp") do (
+        echo  [#] GPU: %%A / %%B MB  ^(%%C%%^)
+    )
+    del "%TEMP%\gpu_info.tmp" 2>nul
+)
+REM Feature H: RAM info
+for /f %%A in ('powershell -NoProfile -c "[math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1MB,1)" 2^>nul') do set "free_ram_gb=%%A"
+for /f %%A in ('powershell -NoProfile -c "[math]::Round((Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize/1MB,1)" 2^>nul') do set "total_ram_gb=%%A"
+if defined free_ram_gb (
+    echo  [#] RAM: !free_ram_gb! / !total_ram_gb! GB free
+)
+
 REM Show working directory
 echo  [^>] Work dir: !work_dir!
 
 REM Feature E: Show last used model
 if defined last_model (
-    echo  [!] Last used: !last_model!  ^(Press Enter to quick launch^)
+    echo  [+] Last used: !last_model!  ^(Press Enter to quick launch^)
 )
 echo.
 
@@ -69,15 +85,16 @@ for /l %%i in (1,1,!count!) do (
 echo.
 echo   P. Pull (download) a new model
 echo   D. Delete a model
+echo   U. Update all models
 echo   W. Change working directory
 echo   0. Exit
 echo.
 
 set "choice="
 if defined last_model (
-    set /p "choice=  Select (0-!count!/P/D/W) [Enter=!last_model!]: "
+    set /p "choice=  Select (0-!count!/P/D/U/W) [Enter=!last_model!]: "
 ) else (
-    set /p "choice=  Select (0-!count!/P/D/W): "
+    set /p "choice=  Select (0-!count!/P/D/U/W): "
 )
 
 REM Feature E: Quick launch on empty input
@@ -91,6 +108,7 @@ if "!choice!"=="" (
 
 if /i "!choice!"=="P" goto pull_model
 if /i "!choice!"=="D" goto delete_model
+if /i "!choice!"=="U" goto update_all
 if /i "!choice!"=="W" goto change_dir
 if "!choice!"=="0" exit
 
@@ -241,5 +259,40 @@ if defined last_model (
 echo work_dir=!work_dir!>> "!CONFIGFILE!"
 echo.
 echo  Working directory changed to: !work_dir!
+pause
+goto menu
+
+REM ========================================
+REM Feature K: Update all models
+REM ========================================
+:update_all
+cls
+echo ========================================================
+echo              Update All Models
+echo ========================================================
+echo.
+
+set ucount=0
+for /f "tokens=1" %%A in ('ollama list 2^>nul ^| findstr /v "^NAME" ^| sort') do (
+    set /a ucount+=1
+    set "umodel_!ucount!=%%A"
+)
+
+if !ucount!==0 (
+    echo  No models to update.
+    pause
+    goto menu
+)
+
+echo  Checking updates for !ucount! model(s)...
+echo.
+
+for /l %%i in (1,1,!ucount!) do (
+    echo  [%%i/!ucount!] Updating !umodel_%%i! ...
+    ollama pull !umodel_%%i!
+    echo.
+)
+
+echo  All models updated.
 pause
 goto menu
