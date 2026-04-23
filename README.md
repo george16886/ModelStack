@@ -2,7 +2,7 @@
 
 ModelStack is a high-performance, aesthetically pleasing terminal user interface (TUI) designed to streamline your LLM workflow. It provides a centralized hub for managing [Ollama](https://ollama.com/) models and seamlessly integrates with tools like **Claude Code**.
 
-[!]()[[image]()](https://github.com/george16886/ModelStack/blob/master/ModelStack.svg)
+[!]()[[image]()](https://raw.githubusercontent.com/george16886/ModelStack/refs/heads/master/ModelStack.svg)
 
 ## ✨ Key Features
 
