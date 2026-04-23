@@ -252,8 +252,9 @@ class ProfileModal(ModalScreen[dict | None]):
                 name = p.get("name", "?")
                 desc = p.get("description", "")
                 model = p.get("model", "")
-                label = f"[bold]{icon}[/bold] {name}  [dim]{desc}[/dim]  [{model}]"
-                items.append(ListItem(Label(label), classes="profile-item"))
+                label_text = f"{icon} {name}  {desc}  ({model})"
+                item_label = Label(label_text)
+                items.append(ListItem(item_label, classes="profile-item"))
             yield ListView(*items, id="profile-list")
             yield Label("[dim]Press Esc to cancel[/dim]")
 
@@ -403,25 +404,26 @@ class LauncherApp(App):
         """Update status panel."""
         running_text = self._running or "(none)"
         color = "green" if self._running else "dim"
-        self.query_one("#stat-running", Static).update(
-            Text.from_markup(f"[{color}][*] Running: {running_text}[/{color}]")
-        )
-        self.query_one("#stat-gpu", Static).update(
-            Text.from_markup(f"[yellow][#] {gpu}[/yellow]")
-        )
-        self.query_one("#stat-ram", Static).update(
-            Text.from_markup(f"[yellow][#] {ram}[/yellow]")
-        )
-        self.query_one("#stat-workdir", Static).update(
-            Text.from_markup(f"[blue][>] Work dir: {self._work_dir}[/blue]")
-        )
+        t = Text(f"[*] Running: {running_text}")
+        t.stylize(color)
+        self.query_one("#stat-running", Static).update(t)
+
+        t = Text(f"[#] {gpu}")
+        t.stylize("yellow")
+        self.query_one("#stat-gpu", Static).update(t)
+
+        t = Text(f"[#] {ram}")
+        t.stylize("yellow")
+        self.query_one("#stat-ram", Static).update(t)
+
+        t = Text(f"[>] Work dir: {self._work_dir}")
+        t.stylize("blue")
+        self.query_one("#stat-workdir", Static).update(t)
+
         if self._last_model:
-            self.query_one("#stat-last", Static).update(
-                Text.from_markup(
-                    f"[cyan][+] Last used: {self._last_model}  "
-                    f"(Select & Enter to launch)[/cyan]"
-                )
-            )
+            t = Text(f"[+] Last used: {self._last_model}  (Select & Enter to launch)")
+            t.stylize("cyan")
+            self.query_one("#stat-last", Static).update(t)
         else:
             self.query_one("#stat-last", Static).update("")
 
