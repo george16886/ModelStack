@@ -1,0 +1,25 @@
+{
+  "profiles": [
+    {
+      "name": "Coding",
+      "icon": ">>",
+      "model": "qwen2.5-coder:latest",
+      "work_dir": "D:\\Claude Code",
+      "description": "Code generation and review"
+    },
+    {
+      "name": "Research",
+      "icon": "??",
+      "model": "gemma4:latest",
+      "work_dir": "D:\\Claude Code",
+      "description": "Analysis and exploration"
+    },
+    {
+      "name": "Reasoning",
+      "icon": "!!",
+      "model": "llama3.2:latest",
+      "work_dir": "D:\\Claude Code",
+      "description": "Logic and problem solving"
+    }
+  ]
+}
