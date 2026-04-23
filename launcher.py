@@ -10,7 +10,7 @@ from rich.text import Text
 from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Vertical
+from textual.containers import Vertical, Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import (
     Footer,
@@ -30,11 +30,11 @@ CONFIG_FILE = SCRIPT_DIR / "config.txt"
 PROFILES_FILE = SCRIPT_DIR / "profiles.json"
 
 LOGO = r"""
-    _    ___   __  __           _      _
-   / \  |_ _| |  \/  | ___   __| | ___| |
-  / _ \  | |  | |\/| |/ _ \ / _` |/ _ \ |
- / ___ \ | |  | |  | | (_) | (_| |  __/ |
-/_/   \_\___| |_|  |_|\___/ \__,_|\___|_|
+__  __           _      _ ____  _             _    
+|  \/  | ___   __| | ___| / ___|| |_ __ _  ___| | __
+| |\/| |/ _ \ / _` |/ _ \ \___ \| __/ _` |/ __|   < 
+| |  | | (_) | (_| |  __/  ___) | || (_| | (__| |\ \
+|_|  |_|\___/ \__,_|\___| |____/ \__\__,_|\___|_| \_\
 """
 
 # ---------------------------------------------------------------------------
@@ -165,7 +165,7 @@ class ListModal(ModalScreen[dict]):
 # App
 # ---------------------------------------------------------------------------
 class ModelStack(App):
-    ENABLE_COMMAND_PALETTE = False
+    ENABLE_COMMAND_PALETTE = True
     BINDINGS = [
         Binding("p", "pull", "Pull"),
         Binding("d", "del", "Delete"),
@@ -194,22 +194,25 @@ class ModelStack(App):
         height: 1;
         text-style: bold;
     }
-    #logo { height: auto; color: $accent; margin: 0 1; }
-    #stats { height: auto; min-height: 5; border: double $accent; padding: 0 1; margin: 0 1; background: $panel; }
+    #logo { width: 1fr; height: auto; color: $accent; margin: 0; padding: 1 1; }
+    #stats { 
+        width: 45; 
+        height: auto; 
+        min-height: 5; 
+        border: double $accent; 
+        padding: 0 1; 
+        margin: 0; 
+        background: $panel; 
+    }
+    #top-bar { height: auto; margin: 0 1; border-bottom: tall $primary; }
     #models { border: round $accent; margin: 1 1; height: 1fr; background: $surface; }
-    #s-in { display: none; margin: 0 1; border: tall $primary; background: $panel; color: $text; height: 3; }
+    #s-in { display: none; margin: 1 1; border: tall $primary; background: $panel; color: $text; height: 3; }
     #details { display: none; height: auto; min-height: 2; border: round $success; margin: 0 1; padding: 0 1; color: $success; }
     #logs { height: auto; min-height: 3; border: round $warning; margin: 0 1; padding: 0 1; color: $warning; }
     #main-body { height: 1fr; }
     .group { color: $text-disabled; text-style: bold italic; padding: 0 1; }
     .item { padding: 0 1; }
     ListItem:focus { background: $primary; color: $text; text-style: bold; }
-    Footer { 
-        background: $primary; 
-        color: $text; 
-        dock: bottom;
-        height: 1;
-    }
     """
 
     def __init__(self):
@@ -244,14 +247,15 @@ class ModelStack(App):
         yield Header()
         yield Footer()
         with Vertical(id="main-body"):
-            yield Static(LOGO, id="logo")
+            with Horizontal(id="top-bar"):
+                yield Static(LOGO, id="logo")
+                with Vertical(id="stats"):
+                    yield Static("Initializing...", id="s-run")
+                    yield Static("", id="s-gpu")
+                    yield Static("", id="s-ram")
+                    yield Static("", id="s-dir")
+                    yield Static("", id="s-last")
             yield Input(placeholder="  Search models...", id="s-in")
-            with Vertical(id="stats"):
-                yield Static("Initializing...", id="s-run")
-                yield Static("", id="s-gpu")
-                yield Static("", id="s-ram")
-                yield Static("", id="s-dir")
-                yield Static("", id="s-last")
             with Vertical(id="models"):
                 yield Label(" ❯ INSTALLED MODELS", variant="bold")
                 yield ListView(id="m-list")
@@ -394,7 +398,7 @@ class ModelStack(App):
     def _do_del(self, n): run_cmd(f"ollama rm {n}"); self.sync_data()
 
     def action_upd(self): 
-        if self._m: self.push_screen(ConfirmModal("Update all models?"), callback=lambda y: self._do_upd() if y else None)
+        if self._m: self._do_upd()
     @work(thread=True)
     def _do_upd(self):
         for m in self._m: 
