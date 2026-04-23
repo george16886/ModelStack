@@ -4,21 +4,21 @@
       "name": "Coding",
       "icon": ">>",
       "model": "qwen2.5-coder:latest",
-      "work_dir": "D:\\Claude Code",
+      "work_dir": "D:\\ModelStack",
       "description": "Code generation and review"
     },
     {
       "name": "Research",
       "icon": "??",
       "model": "gemma4:latest",
-      "work_dir": "D:\\Claude Code",
+      "work_dir": "D:\\ModelStack",
       "description": "Analysis and exploration"
     },
     {
       "name": "Reasoning",
       "icon": "!!",
       "model": "llama3.2:latest",
-      "work_dir": "D:\\Claude Code",
+      "work_dir": "D:\\ModelStack",
       "description": "Logic and problem solving"
     }
   ]
