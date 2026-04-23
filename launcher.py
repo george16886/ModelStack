@@ -166,7 +166,7 @@ class ListModal(ModalScreen[dict]):
 # App
 # ---------------------------------------------------------------------------
 class ModelStack(App):
-    ENABLE_COMMAND_PALETTE = True
+    ENABLE_COMMAND_PALETTE = False
     BINDINGS = [
         Binding("p", "pull", "Pull"),
         Binding("d", "del", "Delete"),
@@ -180,19 +180,21 @@ class ModelStack(App):
     ]
     DEFAULT_CSS = """
     Screen { background: $surface; }
-    Header { 
-        background: $primary; 
+    #app-title { 
+        background: $accent; 
         color: $text; 
         text-style: bold;
         dock: top;
         height: 1;
+        content-align: center middle;
     }
-    Footer { 
+    #custom-footer { 
         background: $accent; 
         color: $text; 
         dock: bottom;
         height: 1;
         text-style: bold;
+        content-align: center middle;
     }
     #logo { width: 1fr; height: auto; color: $accent; margin: 0; padding: 1 1; }
     #stats { 
@@ -263,8 +265,8 @@ class ModelStack(App):
             self._log(f"Error saving profiles: {e}")
 
     def compose(self) -> ComposeResult:
-        yield Header()
-        yield Footer()
+        yield Static(" ModelStack", id="app-title")
+        yield Static("P: Pull | D: Delete | U: Update | W: WorkDir | B: Bookmarks | T: Profiles | R: Sync | X: Stop | Q: Quit", id="custom-footer")
         with Vertical(id="main-body"):
             with Horizontal(id="top-bar"):
                 yield Static(LOGO, id="logo")
