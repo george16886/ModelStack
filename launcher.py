@@ -435,8 +435,20 @@ class LauncherApp(App):
 
     # --- Actions ---
 
+    def on_list_view_selected(self, event: ListView.Selected) -> None:
+        """Handle Enter on a model in the list."""
+        idx = event.list_view.index
+        if idx is not None and 0 <= idx < len(self._models):
+            model_name = self._models[idx]["name"]
+            self._launch_model = model_name
+            self._last_model = model_name
+            self._config["last_model"] = model_name
+            self._config["work_dir"] = self._work_dir
+            save_config(self._config)
+            self.exit()
+
     def action_launch_selected(self) -> None:
-        """Launch the selected model."""
+        """Launch the selected model (fallback for Enter binding)."""
         lv = self.query_one("#model-list", ListView)
         idx = lv.index
         if idx is not None and 0 <= idx < len(self._models):
