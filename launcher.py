@@ -174,7 +174,6 @@ class ModelStack(App):
         Binding("b", "bm", "Bookmarks"),
         Binding("t", "prof", "Profiles"),
         Binding("r", "sync", "Sync"),
-        Binding("s", "sh", "Shortcut"),
         Binding("x", "stop", "Stop"),
         Binding("q", "quit", "Quit")
     ]
@@ -205,7 +204,8 @@ class ModelStack(App):
         background: $panel; 
     }
     #top-bar { height: auto; margin: 0 1; border-bottom: tall $primary; }
-    #models { border: round $accent; margin: 1 1; height: 1fr; background: $surface; }
+    #models { border: round $accent; margin: 1 1; height: 1fr; background: $surface; overflow: hidden; }
+    #m-list { height: 1fr; overflow-y: auto; }
     #s-in { display: none; margin: 1 1; border: tall $primary; background: $panel; color: $text; height: 3; }
     #details { display: none; height: auto; min-height: 2; border: round $success; margin: 0 1; padding: 0 1; color: $success; }
     #logs { height: auto; min-height: 3; border: round $warning; margin: 0 1; padding: 0 1; color: $warning; }
@@ -344,6 +344,7 @@ class ModelStack(App):
         if m: 
             det.display = True
             self._show_det(m["name"])
+            if e.item: self.call_after_refresh(e.item.scroll_visible)
         else: 
             det.display = False
             det.update("")
@@ -445,18 +446,6 @@ class ModelStack(App):
         self._save_cfg()
         self.sync_data()
         self._log(f"Profile: {p['name']} set.")
-
-    @work(thread=True)
-    def action_sh(self):
-        try:
-            d = run_cmd("powershell -c '[Environment]::GetFolderPath(\"Desktop\")'")
-            if not d: d = str(Path.home() / "Desktop")
-            sh = Path(d) / "AI Launcher.lnk"
-            # Using double quotes and properly escaping for PowerShell inside CMD
-            cmd = f'powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut(\'{sh}\'); $s.TargetPath = \'python.exe\'; $s.Arguments = \'{SCRIPT_DIR / "launcher.py"}\'; $s.WorkingDirectory = \'{SCRIPT_DIR}\'; $s.Save()"'
-            run_cmd(cmd)
-            self._log("Shortcut created.")
-        except: pass
 
     def action_sync(self): self.sync_data()
 
