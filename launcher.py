@@ -188,13 +188,12 @@ class ModelStack(App):
         height: 1;
         content-align: center middle;
     }
-    #custom-footer { 
+    Footer { 
         background: $accent; 
         color: $text; 
         dock: bottom;
         height: 1;
         text-style: bold;
-        content-align: center middle;
     }
     #logo { width: 1fr; height: auto; color: $accent; margin: 0; padding: 1 1; }
     #stats { 
@@ -266,7 +265,7 @@ class ModelStack(App):
 
     def compose(self) -> ComposeResult:
         yield Static(" ModelStack", id="app-title")
-        yield Static("P: Pull | D: Delete | U: Update | W: WorkDir | B: Bookmarks | T: Profiles | R: Sync | X: Stop | Q: Quit", id="custom-footer")
+        yield Footer()
         with Vertical(id="main-body"):
             with Horizontal(id="top-bar"):
                 yield Static(LOGO, id="logo")
