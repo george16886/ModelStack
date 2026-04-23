@@ -75,6 +75,7 @@ function Show-Menu {
     Write-Host "  (v2.0) " -ForegroundColor DarkGray
     Write-Host " └──────────────────────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""
+    Write-Host ""
     
     $running = Get-Running
     if ($running) {
@@ -85,11 +86,11 @@ function Show-Menu {
     }
 
     try {
-        $gpu = nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv,noheader,nounits 2>$null
-        if ($gpu) {
-            $p = $gpu -split ',\s*'
-            Write-Host "  ⚛ GPU: " -NoNewline -ForegroundColor Yellow
-            Write-Host "$($p[0])/$($p[1]) MB ($($p[2])%)"
+        $gpuInfo = nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv,noheader,nounits 2>$null
+        if ($gpuInfo) {
+            $p = $gpuInfo -split ',\s*'
+            Write-Host "  ⚛ $($p[0])" -ForegroundColor Yellow
+            Write-Host "    └─ Usage: $($p[1])/$($p[2]) MB ($($p[3])%)" -ForegroundColor Yellow
         }
     } catch {}
 
@@ -206,7 +207,24 @@ while ($true) {
         }
         "pull" {
             Write-Host ""
-            $name = Read-Host "  Model name (e.g. phi3, mistral)"
+            Write-Host "  Popular Model Suggestions:" -ForegroundColor Yellow
+            $suggestions = @("llama3.2", "llama3.1", "qwen2.5", "qwen2.5-coder", "gemma2", "mistral", "phi3:mini")
+            for ($i = 0; $i -lt $suggestions.Count; $i++) {
+                Write-Host "  $($i+1). $($suggestions[$i])"
+            }
+            Write-Host "  M. Manual Input..."
+            $pc = Read-Host "  Select model suggestion (1-$($suggestions.Count)/M)"
+            
+            $name = $null
+            if ($pc -eq "M" -or $pc -eq "m") {
+                $name = Read-Host "  Enter model name"
+            } elseif ($pc -match '^\d+$') {
+                $pi = [int]$pc - 1
+                if ($pi -ge 0 -and $pi -lt $suggestions.Count) {
+                    $name = $suggestions[$pi]
+                }
+            }
+            
             if ($name) {
                 Write-Host "  Downloading $name ..." -ForegroundColor Yellow
                 ollama pull $name

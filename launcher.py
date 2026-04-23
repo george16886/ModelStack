@@ -90,12 +90,12 @@ def get_running_info() -> str | None:
     p = lines[1].split()
     return p[0] if p else None
 
-def get_gpu_info() -> str:
-    raw = run_cmd("nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu --format=csv,noheader,nounits", timeout=5)
-    if not raw: return "GPU: N/A"
+def get_gpu_info() -> tuple[str, str]:
+    raw = run_cmd("nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv,noheader,nounits", timeout=5)
+    if not raw: return "N/A", "GPU: N/A"
     p = [x.strip() for x in raw.split(",")]
-    if len(p) >= 3: return f"GPU: {p[0]}/{p[1]} MB ({p[2]}%)"
-    return "GPU: N/A"
+    if len(p) >= 4: return p[0], f"{p[1]}/{p[2]} MB ({p[3]}%)"
+    return "N/A", "GPU: N/A"
 
 def get_ram_info() -> str:
     # Try multiple methods for RAM
@@ -196,12 +196,12 @@ class ModelStack(App):
     }
     #logo { width: 1fr; height: auto; color: $accent; margin: 0; padding: 1 1; }
     #stats { 
-        width: 45; 
+        width: 60; 
         height: auto; 
-        min-height: 5; 
+        min-height: 7; 
         border: double $accent; 
         padding: 0 1; 
-        margin: 0; 
+        margin: 1 0 0 0; 
         background: $panel; 
     }
     #top-bar { height: auto; margin: 0 1; border-bottom: tall $primary; }
@@ -270,6 +270,7 @@ class ModelStack(App):
                 yield Static(LOGO, id="logo")
                 with Vertical(id="stats"):
                     yield Static("Initializing...", id="s-run")
+                    yield Static("", id="s-gpu-name")
                     yield Static("", id="s-gpu")
                     yield Static("", id="s-ram")
                     yield Static("", id="s-dir")
@@ -322,7 +323,8 @@ class ModelStack(App):
         try:
             self._run = r
             self.query_one("#s-run", Static).update(Text(f" ⦿ Running: {r or '(none)'}", style="bold green" if r else "white"))
-            self.query_one("#s-gpu", Static).update(Text(f" ⚛ {g}", style="yellow"))
+            self.query_one("#s-gpu-name", Static).update(Text(f" ⚛ {g[0]}", style="yellow"))
+            self.query_one("#s-gpu", Static).update(Text(f"   └─ {g[1]}", style="yellow"))
             self.query_one("#s-ram", Static).update(Text(f" ⚙ {rm}", style="yellow"))
             self.query_one("#s-dir", Static).update(Text(f" ➔ Dir: {self._wdir}", style="blue"))
             l = f" ♥ Preferred: {self._last}" if self._last else ""
@@ -421,7 +423,20 @@ class ModelStack(App):
         self._cfg["work_dir"] = self._wdir
         self._save_cfg(); self.exit()
 
-    def action_pull(self): self.push_screen(InputModal("Pull", "phi3"), callback=self._do_pull)
+    def action_pull(self):
+        suggestions = ["llama3.2", "llama3.1", "qwen2.5", "qwen2.5-coder", "gemma2", "mistral", "phi3:mini", "+ Custom Input..."]
+        self.push_screen(ListModal("Pull Model Suggestion", suggestions), callback=self._handle_pull_choice)
+
+    def _handle_pull_choice(self, r):
+        idx, act = r.get("idx", -1), r.get("act")
+        self.query_one("#m-list").focus()
+        if idx == -1 or act == "cancel": return
+        suggestions = ["llama3.2", "llama3.1", "qwen2.5", "qwen2.5-coder", "gemma2", "mistral", "phi3:mini"]
+        if 0 <= idx < len(suggestions):
+            self._do_pull(suggestions[idx])
+        elif idx == len(suggestions):
+            self.push_screen(InputModal("Pull Custom Model", "phi3"), callback=self._do_pull)
+
     @work(thread=True)
     def _do_pull(self, n):
         if n: self._log(f"Pulling {n}..."); run_cmd(f"ollama pull {n}", None); self.sync_data()
