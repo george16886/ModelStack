@@ -1,4 +1,4 @@
-# AI Model Launcher — PowerShell Version
+# ModelStack — PowerShell Version
 # Lightweight alternative with colored output
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -71,7 +71,7 @@ function Get-Running {
 function Show-Menu {
     Clear-Host
     Write-Host " ┌──────────────────────────────────────────────────────┐" -ForegroundColor Cyan
-    Write-Host " │                 AI Model Launcher                    │" -ForegroundColor Cyan -NoNewline
+    Write-Host " │                 ModelStack                           │" -ForegroundColor Cyan -NoNewline
     Write-Host "  (v2.0) " -ForegroundColor DarkGray
     Write-Host " └──────────────────────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""

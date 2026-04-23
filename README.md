@@ -2,7 +2,9 @@
 
 ModelStack is a high-performance, aesthetically pleasing terminal user interface (TUI) designed to streamline your LLM workflow. It provides a centralized hub for managing [Ollama](https://ollama.com/) models and seamlessly integrates with tools like **Claude Code**.
 
-![ModelStack Interface](https://raw.githubusercontent.com/george16886/ModelStack/master/screenshot.png) *(Placeholder for your screenshot)*
+https://github.com/george16886/ModelStack/blob/master/ModelStack.svg
+
+![image]()
 
 ## ✨ Key Features
 
@@ -40,13 +42,17 @@ pip install -r requirements.txt
 ## 🚀 Getting Started
 
 ### Python TUI Version (Recommended)
+
 Experience the full power of ModelStack with live updates and mouse support.
+
 ```bash
 python launcher.py
 ```
 
 ### PowerShell Version
+
 A fast, one-file alternative for systems without Python.
+
 ```powershell
 .\launcher.ps1
 ```
@@ -55,17 +61,17 @@ A fast, one-file alternative for systems without Python.
 
 ## ⌨️ Keyboard Shortcuts (Python TUI)
 
-| Key | Action | Description |
-|:---:|:---|:---|
-| `P` | **Pull** | Download a new model from Ollama Hub |
-| `D` | **Delete** | Remove a selected model from local storage |
-| `U` | **Update** | Sync all local models with latest versions |
-| `W` | **WorkDir** | Set the current execution directory |
-| `B` | **Bookmarks** | Access saved project paths |
-| `T` | **Profiles** | Switch between task-specific model profiles |
-| `R` | **Sync** | Refresh system stats and sync Claude configs |
-| `X` | **Stop** | Instantly stop the currently running model |
-| `Q` | **Quit** | Exit the launcher |
+|  Key  | Action              | Description                                  |
+| :---: | :------------------ | :------------------------------------------- |
+| `P` | **Pull**      | Download a new model from Ollama Hub         |
+| `D` | **Delete**    | Remove a selected model from local storage   |
+| `U` | **Update**    | Sync all local models with latest versions   |
+| `W` | **WorkDir**   | Set the current execution directory          |
+| `B` | **Bookmarks** | Access saved project paths                   |
+| `T` | **Profiles**  | Switch between task-specific model profiles  |
+| `R` | **Sync**      | Refresh system stats and sync Claude configs |
+| `X` | **Stop**      | Instantly stop the currently running model   |
+| `Q` | **Quit**      | Exit the launcher                            |
 
 ---
 
