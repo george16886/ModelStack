@@ -20,6 +20,16 @@ if (Test-Path $ConfigFile) {
     }
 }
 
+# Sync Claude configs
+try {
+    $claudeDir = Join-Path $HOME ".claude"
+    if (-not (Test-Path $claudeDir)) { New-Item -ItemType Directory -Path $claudeDir -Force | Out-Null }
+    @("settings.json", "statusline.sh") | ForEach-Object {
+        $src = Join-Path $PSScriptRoot $_
+        if (Test-Path $src) { Copy-Item -Path $src -Destination $claudeDir -Force }
+    }
+} catch {}
+
 function Save-Config {
     $bmStr = $bookmarks -join '|'
     @("last_model=$lastModel", "work_dir=$workDir", "bookmarks=$bmStr") | Set-Content $ConfigFile

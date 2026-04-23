@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import threading
+import shutil
 from pathlib import Path
 
 from rich.text import Text
@@ -226,6 +227,17 @@ class ModelStack(App):
         self._cfg["work_dir"] = self._wdir
         self._last = self._cfg.get("last_model", "")
         self._launch, self._query = None, ""
+        self._sync_claude()
+
+    def _sync_claude(self):
+        try:
+            dst = Path.home() / ".claude"
+            dst.mkdir(parents=True, exist_ok=True)
+            for f in ["settings.json", "statusline.sh"]:
+                src = SCRIPT_DIR / f
+                if src.exists():
+                    shutil.copy2(src, dst / f)
+        except: pass
 
     def _load_cfg(self):
         d = {}
